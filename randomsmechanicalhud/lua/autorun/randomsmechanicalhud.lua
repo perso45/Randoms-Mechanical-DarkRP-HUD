@@ -63,9 +63,11 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 	local hide = {
 		["CHudHealth"]=true,
 		["CHudBattery"]=true,
+		["CHudSuitPower"]=true,
 		["CHudAmmo"]=true,
 		["CHudSecondaryAmmo"]=true,
-		["DarkRP_Hungermod"]=true
+		["DarkRP_Hungermod"]=true,
+		["DarkRP_Agenda"]=true
 	}
 	local function HUDShouldDraw(name)
 		if (hide[name]) then
@@ -103,7 +105,7 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 		end
 		//Health Display
 		local health = client:Health()
-		local maxhealth = client:GetMaxHealth()\
+		local maxhealth = client:GetMaxHealth()
 		//Health Logic
 		local redhealth = (maxhealth-health)*(255/maxhealth)
 		local greenhealth = health*(255/maxhealth)
@@ -137,12 +139,14 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 		local name = client:Name()
 		draw.SimpleText(name, "UserHUDFont", 8, ScrH()-138, Color(255,255,255), 0, 0)
 		//Job Display
-		draw.SimpleText(team.GetName(client:Team()), "UserHUDFont", 8, ScrH()-117, Color(255,255,255), 0, 0)
+		local plyteam = client:Team()
+		local teamcolor = team.GetColor(plyteam)
+		draw.SimpleText(team.GetName(plyteam), "UserHUDFont", 8, ScrH()-117, teamcolor, 0, 0)
 		//Money Display
 		if client:getDarkRPVar("money")>0 then
-		draw.SimpleText( DarkRP.formatMoney(client:getDarkRPVar("money")), "UserHUDFont", 300, ScrH()-117, Color(119,221,119), 2, 2)
+		draw.SimpleText("$"..client:getDarkRPVar("salary").."+"..DarkRP.formatMoney(client:getDarkRPVar("money")), "UserHUDFont", 300, ScrH()-117, Color(119,221,119), 2, 2)
 		else
-		draw.SimpleText( DarkRP.formatMoney(client:getDarkRPVar("money")), "UserHUDFont", 300, ScrH()-117, Color(255,0,0), 2, 2)
+		draw.SimpleText("$"..client:getDarkRPVar("salary").."+"..DarkRP.formatMoney(client:getDarkRPVar("money")), "UserHUDFont", 300, ScrH()-117, Color(255,0,0), 2, 2)
 		end
 		//Rank Display
 		draw.SimpleText(string.upper(client:GetUserGroup()), "UserHUDFont", 300, ScrH()-138, Color(255,255,255), 2, 2)
@@ -170,5 +174,7 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 			else
 				draw.SimpleText("Ammo: "..client:GetAmmoCount(client:GetActiveWeapon():GetPrimaryAmmoType()), "AmmoHUDFont",300+2 , ScrH()-20, Color(255,255,255), 2, 2)
 			end
+		//Agenda HUD
+
 		end)
 end)
