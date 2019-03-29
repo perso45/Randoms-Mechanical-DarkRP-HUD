@@ -21,6 +21,38 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 		additive=false,
 		outline=false,
 	})
+	surface.CreateFont("AgendaHUDFont", {
+		font="Courier",
+		size=20,
+		weight=1000,
+		blursize=0,
+		scanlines=0,
+		antialias=true,
+		underline=false,
+		italic=false,
+		strikeout=false,
+		symbol=false,
+		rotary=false,
+		shadow=false,
+		additive=false,
+		outline=false,
+	})
+	surface.CreateFont("LockdownFont", {
+		font="Courier",
+		size=30,
+		weight=5000,
+		blursize=0,
+		scanlines=0,
+		antialias=true,
+		underline=true,
+		italic=false,
+		strikeout=false,
+		symbol=false,
+		rotary=false,
+		shadow=false,
+		additive=false,
+		outline=false,
+	})
 	surface.CreateFont("AmmoHUDFont", {
 		font="Courier",
 		size=14,
@@ -63,9 +95,11 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 	local hide = {
 		["CHudHealth"]=true,
 		["CHudBattery"]=true,
+		["CHudSuitPower"]=true,
 		["CHudAmmo"]=true,
 		["CHudSecondaryAmmo"]=true,
-		["DarkRP_Hungermod"]=true
+		["DarkRP_Hungermod"]=true,
+		["DarkRP_Agenda"]=true
 	}
 	local function HUDShouldDraw(name)
 		if (hide[name]) then
@@ -75,6 +109,7 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 	hook.Add("HUDShouldDraw", "HUDHider", HUDShouldDraw)
 
 	hook.Add("HUDPaint", "DrawMyHud", function()
+		//Background Box
 		draw.RoundedBox(10, 2, ScrH()-160, 302+10, ScrH(), Color(174,198,207,125))
 		//Playermodel Display
 		draw.RoundedBox(10,6,ScrH()-95,100,ScrH(),Color(169,169,169,190))
@@ -87,13 +122,10 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 			PlayerModel=vgui.Create("DModelPanel");
 			PlayerModel:SetPos(20,ScrH()-40-100);
 			PlayerModel:SetModel(model);
-			PlayerModel.__Model=model;
 			PlayerModel:SetSize(75,150)
 			PlayerModel:SetCamPos(Vector(16,0,65));
 			PlayerModel:SetLookAt(Vector(0,0,65));
-			PlayerModel:SetAnimated(false);
-			PlayerModel:SetAnimationEnabled(false);
-			PlayerModel.bAnimated=false;
+			PlayerModel:SetAnimated(true);
 			PlayerModel:ParentToHUD();
 		end
 
@@ -103,7 +135,7 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 		end
 		//Health Display
 		local health = client:Health()
-		local maxhealth = client:GetMaxHealth()\
+		local maxhealth = client:GetMaxHealth()
 		//Health Logic
 		local redhealth = (maxhealth-health)*(255/maxhealth)
 		local greenhealth = health*(255/maxhealth)
@@ -137,12 +169,14 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 		local name = client:Name()
 		draw.SimpleText(name, "UserHUDFont", 8, ScrH()-138, Color(255,255,255), 0, 0)
 		//Job Display
-		draw.SimpleText(team.GetName(client:Team()), "UserHUDFont", 8, ScrH()-117, Color(255,255,255), 0, 0)
+		local plyteam = client:Team()
+		local teamcolor = team.GetColor(plyteam)
+		draw.SimpleText(team.GetName(plyteam), "UserHUDFont", 8, ScrH()-117, teamcolor, 0, 0)
 		//Money Display
 		if client:getDarkRPVar("money")>0 then
-		draw.SimpleText( DarkRP.formatMoney(client:getDarkRPVar("money")), "UserHUDFont", 300, ScrH()-117, Color(119,221,119), 2, 2)
+		draw.SimpleText("$"..client:getDarkRPVar("salary").."+"..DarkRP.formatMoney(client:getDarkRPVar("money")), "UserHUDFont", 300, ScrH()-117, Color(119,221,119), 2, 2)
 		else
-		draw.SimpleText( DarkRP.formatMoney(client:getDarkRPVar("money")), "UserHUDFont", 300, ScrH()-117, Color(255,0,0), 2, 2)
+		draw.SimpleText("$"..client:getDarkRPVar("salary").."+"..DarkRP.formatMoney(client:getDarkRPVar("money")), "UserHUDFont", 300, ScrH()-117, Color(255,0,0), 2, 2)
 		end
 		//Rank Display
 		draw.SimpleText(string.upper(client:GetUserGroup()), "UserHUDFont", 300, ScrH()-138, Color(255,255,255), 2, 2)
@@ -170,5 +204,17 @@ hook.Add( "InitPostEntity", "HUDStart", function()
 			else
 				draw.SimpleText("Ammo: "..client:GetAmmoCount(client:GetActiveWeapon():GetPrimaryAmmoType()), "AmmoHUDFont",300+2 , ScrH()-20, Color(255,255,255), 2, 2)
 			end
+		//Agenda HUD
+		if !client:getAgendaTable() then return end
+			draw.RoundedBox(10, 6, ScrH()-890, 350, 180, Color(69,69,69,100))
+			draw.RoundedBox(10, 8, ScrH()-886, 346, 20, Color(255,0,0,150))
+			draw.SimpleText(string.upper(client:getAgendaTable().Title), "AgendaHUDFont", 10, ScrH()-886, Color(255,255,255), 0, 0)
+			draw.DrawNonParsedText(DarkRP.textWrap(client:getDarkRPVar("agenda") or "","AgendaHUDFont",340), "AgendaHUDFont", 10, ScrH()-880, Color(255,255,255), 0, 0)
+		//Lockdown Display
+		if GetGlobalBool( "DarkRP_LockDown" ) then
+        	draw.SimpleText( 'LOCKDOWN ACTIVE!', "LockdownFont", ScrW()/2, ScrH() - 800, Color( 200, 0, 0 ),1,1)
+			draw.SimpleText("Please Return To Your Homes", "LockdownFont", ScrW()/2, ScrH()-780, Color(200,0,0),1,1)
+			draw.SimpleText("Or A Designated Safe Zone", "LockdownFont", ScrW()/2, ScrH()-760, Color(200,0,0),1,1)
+   		end
 		end)
 end)
